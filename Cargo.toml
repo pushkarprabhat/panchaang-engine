@@ -1,0 +1,16 @@
+[package]
+name = "panchaang-engine"
+version = "0.1.0"
+edition = "2024"
+license = "AGPL-3.0-only"
+
+[dependencies]
+chrono = { version = "0.4", features = ["serde"] }
+serde = { version = "1.0", features = ["derive"] }
+
+# Optional high-precision ephemeris (enable with `--features ephem`)
+# Using `siderust` for high-precision pure-Rust astronomy (AGPL license)
+siderust = { version = "0.11.1", optional = true, features = ["serde"] }
+
+[features]
+ephem = ["siderust"]
