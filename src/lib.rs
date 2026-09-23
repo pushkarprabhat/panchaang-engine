@@ -1,7 +1,7 @@
 use chrono::{DateTime, Duration, NaiveDate, Utc};
 
 const TITHI_ARC_DEGREES: f64 = 12.0;
-const BOUNDARY_SCAN_LIMIT_HOURS: usize = 24 * 7;
+const BOUNDARY_SCAN_LIMIT_HOURS: usize = 24 * 35;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CalendarEra {
@@ -45,6 +45,7 @@ pub struct TithiInterval {
 pub enum InverseSearchError {
     InvalidTithi(u8),
     BoundaryNotFound,
+    InvalidGregorianYear(i32),
 }
 
 pub trait AstronomyEngine {
@@ -59,17 +60,20 @@ pub trait AstronomyEngine {
 /// - Era offsets of Vikram = Gregorian + 57 and Shaka = Gregorian - 78
 /// - Chaitra is approximately aligned around March 21
 /// - Each lunar month advances by an approximate 29-day offset
-pub fn estimate_search_window(input: InverseSearchInput) -> (NaiveDate, NaiveDate) {
+pub fn estimate_search_window(
+    input: InverseSearchInput,
+) -> Result<(NaiveDate, NaiveDate), InverseSearchError> {
     let gregorian_year = match input.era {
         CalendarEra::VikramSamvat => input.samvat_year - 57,
         CalendarEra::ShakaSamvat => input.samvat_year + 78,
     };
 
-    let base = NaiveDate::from_ymd_opt(gregorian_year, 3, 21).expect("valid base date");
+    let base = NaiveDate::from_ymd_opt(gregorian_year, 3, 21)
+        .ok_or(InverseSearchError::InvalidGregorianYear(gregorian_year))?;
     let anchor = base + Duration::days(input.lunar_month as i64 * 29);
     let start = anchor - Duration::days(15);
     let end = start + Duration::days(29);
-    (start, end)
+    Ok((start, end))
 }
 
 pub fn inverse_search_tithi<E: AstronomyEngine>(
@@ -79,7 +83,7 @@ pub fn inverse_search_tithi<E: AstronomyEngine>(
     if !(1..=30).contains(&input.tithi) {
         return Err(InverseSearchError::InvalidTithi(input.tithi));
     }
-    let (start, end) = estimate_search_window(input);
+    let (start, end) = estimate_search_window(input)?;
     let mut out = Vec::new();
     let mut day = start;
 
@@ -214,7 +218,7 @@ mod tests {
             lunar_month: LunarMonth::Chaitra,
             tithi: 2,
         };
-        let (start, end) = estimate_search_window(input);
+        let (start, end) = estimate_search_window(input).unwrap();
         assert_eq!(end.signed_duration_since(start).num_days(), 29);
         assert!(start <= NaiveDate::from_ymd_opt(2026, 3, 21).unwrap());
     }
