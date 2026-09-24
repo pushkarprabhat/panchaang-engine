@@ -31,4 +31,4 @@ cargo build --target wasm32-unknown-unknown --features wasm
 
 ## License
 
-AGPL-3.0-only. Commercial dual-license: replace `legal@example.com` with the LLP address before publishing.
+AGPL-3.0-only. Commercial dual-license: **legal@theiaone-ai.com**.

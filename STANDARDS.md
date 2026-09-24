@@ -1,38 +1,48 @@
 # panchaang-engine standards
 
-These are the **default product standards** until the owner replaces a line.
-Anything marked **OWNER** needs an explicit yes/no.
+Confirmed by owner on 2026-09-24. These are product rules, not drafts.
 
 ## Calendar
 
-| Rule | Default | Owner must confirm |
-|---|---|---|
-| Tithi numbering | `Paksha` + `1..=15` (15 = Purnima or Amavasya) | No unless you want 1..=30 |
-| Civil-day tithi | Tithi **at local sunrise** for that lat/lon | **OWNER**: sunrise vs sunset vs midnight |
-| Month system default | Amanta. `is_purnimanta=true` shifts the reverse search window | **OWNER** |
-| Ayanamsa | Lahiri (Chitrapaksha), applied to Sun/Moon before nakshatra and yoga | **OWNER** if you want a different ayanamsa |
-| Tithi / karana | From **elongation** (Moon − Sun). Ayanamsa cancels. | — |
-| Time scale | Input UTC. Local civil day uses `timezone_offset_hours`. | — |
+| Rule | Locked value |
+|---|---|
+| Tithi numbering | `Paksha` + `1..=15` (15 = Purnima or Amavasya) |
+| Civil-day tithi | Tithi at **local sunrise** for that lat/lon |
+| Month system default | **Amanta**. `is_purnimanta=true` shifts the reverse search window |
+| Ayanamsa | **Lahiri (Chitrapaksha)**, applied before nakshatra and yoga |
+| Tithi / karana | From elongation (Moon − Sun). Ayanamsa cancels. |
+| Time scale | Input UTC. Local civil day uses `timezone_offset_hours`. |
 
 ## Astronomy (in-repo, no siderust, no Drik)
 
-- Sun: Meeus apparent ecliptic longitude (equation of centre + low-order apparent correction).
-- Moon: Meeus truncated ELP periodic terms (in-tree).
-- Sunrise / sunset: NOAA geometric algorithm, solar altitude −0.83°.
+- Sun: Meeus apparent ecliptic longitude.
+- Moon: Meeus truncated ELP periodic terms.
+- Sunrise / sunset: NOAA, solar altitude −0.83°.
 - Polar day/night → `PanchaangError::PolarDayNight`.
 
-This is **owned** math. It is not JPL DE440. Accuracy target for v0: tithi correct at sunrise for certified gold rows; muhurat bounds within a few minutes.
+Accuracy target for v0: certified gold rows match at sunrise; tithi bounds within a few minutes.
 
-## Festival assignment (separate from civil tithi)
+## Festival assignment
 
-A festival is **not** “whatever tithi the engine printed at 00:00 UTC”.
+A festival is not “whatever tithi printed at 00:00 UTC”.
 
-| Festival | Civil rule we use in gold tests | Owner must confirm |
+| Festival | Locked rule |
+|---|---|
+| Diwali | Kartika Amavasya prevailing at **local sunset / Pradosh**. Sunrise that morning may still be Krishna 14. |
+| Gudi Padwa / Ugadi / Chaitra Navratri day 1 | Chaitra Shukla Pratipada at **sunrise** |
+
+## Certified cities
+
+Gold tests must pass at sunrise for:
+
+| City | Lat | Lon |
 |---|---|---|
-| Diwali | Kartika Amavasya prevailing at **local sunset / Pradosh**, not sunrise | **OWNER** |
-| Gudi Padwa / Ugadi / Chaitra Navratri day 1 | Chaitra Shukla Pratipada at **sunrise** | **OWNER** |
+| Delhi | 28.6139 | 77.2090 |
+| Mumbai | 19.0760 | 72.8777 |
+| Ujjain | 23.1765 | 75.7849 |
+| Jaipur | 26.9124 | 75.7873 |
 
-Gold tests live in `tests/panchaang_tests.rs` (`gold_sunrise_tithi`).
+Rows: `tests/panchaang_tests.rs`.
 
 ## Service
 
@@ -40,6 +50,4 @@ Standalone HTTP API in this repo (`panchaang-api`). No other product is coupled 
 
 ## License
 
-AGPL-3.0-only on **this** source. Commercial dual-license is possible only for this tree (no siderust).
-
-**OWNER**: replace `legal@example.com` with the LLP address before any public publish.
+AGPL-3.0-only on this source. Commercial dual-license enquiries: **legal@theiaone-ai.com**.
