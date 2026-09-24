@@ -1,34 +1,34 @@
-# panchang-engine
-High-performance Rust library (Wasm-ready) for bi-directional Panchang calculations (Gregorian ↔ Hindu Calendar).
+# panchaang-engine
+
+Owned bi-directional Panchang engine (Gregorian ↔ Hindu calendar).
+
+Standards: [`STANDARDS.md`](STANDARDS.md). In-tree Sun/Moon (Meeus), Lahiri ayanamsa, civil tithi at **local sunrise**. No siderust. No Drik.
 
 ![CI](https://github.com/pushkarprabhat/panchaang-engine/actions/workflows/ci.yml/badge.svg)
 
-Features:
-
-- `ephem`: enable high-precision ephemeris support via `siderust` (pure-Rust). Note: `siderust` is AGPL-licensed.
-- `wasm`: enable WebAssembly JS bindings via `wasm-bindgen`.
-
-Rust usage (native):
+## Build and test
 
 ```bash
-cargo add panchaang-engine --path .
-cargo test --features ephem -- --nocapture
+cargo test
+cargo run --bin panchaang -- "2023-11-12T00:00:00Z" 28.6139 77.2090
 ```
 
-WASM usage (build):
+API (standalone):
+
+```bash
+cargo run --bin panchaang-api --features server
+# POST http://127.0.0.1:8088/v1/panchang
+# {"date_time":"2023-03-22T00:00:00Z","latitude":19.076,"longitude":72.8777}
+```
+
+Wasm:
 
 ```bash
 cargo build --target wasm32-unknown-unknown --features wasm
-wasm-bindgen --out-dir pkg --target web target/wasm32-unknown-unknown/debug/panchaang_engine.wasm
 ```
 
-CLI:
+`--features ephem` is accepted and ignored (kept so older CI flags still run).
 
-```bash
-cargo run --bin panchaang -- "2026-09-23T00:00:00Z" 28.6139 77.2090
-```
+## License
 
-License & Commercial Contact:
-
-This project is licensed under AGPLv3. If you require a commercial, non-GPL license, please contact the maintainers at legal@example.com to discuss dual-licensing options.
-
+AGPL-3.0-only. Commercial dual-license: replace `legal@example.com` with the LLP address before publishing.
