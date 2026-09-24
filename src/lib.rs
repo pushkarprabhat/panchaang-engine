@@ -64,9 +64,10 @@ pub fn estimate_search_window(
     input: InverseSearchInput,
 ) -> Result<(NaiveDate, NaiveDate), InverseSearchError> {
     let gregorian_year = match input.era {
-        CalendarEra::VikramSamvat => input.samvat_year - 57,
-        CalendarEra::ShakaSamvat => input.samvat_year + 78,
-    };
+        CalendarEra::VikramSamvat => input.samvat_year.checked_sub(57),
+        CalendarEra::ShakaSamvat => input.samvat_year.checked_add(78),
+    }
+    .ok_or(InverseSearchError::InvalidGregorianYear(input.samvat_year))?;
 
     let base = NaiveDate::from_ymd_opt(gregorian_year, 3, 21)
         .ok_or(InverseSearchError::InvalidGregorianYear(gregorian_year))?;
