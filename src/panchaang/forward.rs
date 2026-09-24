@@ -1,6 +1,6 @@
 
 use chrono::{DateTime, Utc};
-use crate::types::{PanchangInput, Paksha};
+use crate::types::{PanchangInput, Paksha, PanchaangError};
 
 pub struct PanchaangOutput {
 	pub tithi_number: u8,
@@ -60,15 +60,21 @@ fn moon_mean_long(jd: f64) -> f64 {
 }
 
 // Simple sunrise/sunset estimation using previous helper (in reverse.rs), approximate
-fn approx_sunrise_sunset(jd_midnight: f64, lon: f64, lat: f64) -> Option<(f64,f64)> {
-	// reuse a crude method: compute sunrise JD and estimate sunset as opposite
-	use crate::panchaang::reverse::sunrise_jd_for_date;
-	let rise = sunrise_jd_for_date(jd_midnight, lon, lat)?;
+fn approx_sunrise_sunset(jd_midnight: f64, lon: f64, lat: f64) -> Result<(f64,f64), PanchaangError> {
+	// reuse NOAA-based method: compute sunrise JD and estimate sunset as opposite
+	let rise = crate::panchaang::reverse::sunrise_jd_for_date(jd_midnight, lon, lat)?;
 	let set = rise + 0.5; // approximate: 12 hours later
-	Some((rise, set))
+	Ok((rise, set))
 }
 
-pub fn calculate_panchaang(input: &PanchangInput) -> Result<PanchaangOutput, String> {
+pub fn calculate_panchaang(input: &PanchangInput) -> Result<PanchaangOutput, PanchaangError> {
+	// Input validation
+	if !( -90.0..=90.0 ).contains(&input.latitude) {
+		return Err(PanchaangError::InvalidLatitude(input.latitude));
+	}
+	if !( -180.0..=180.0 ).contains(&input.longitude) {
+		return Err(PanchaangError::InvalidLongitude(input.longitude));
+	}
 	// 1. JD
 	let jd = jd_from_datetime(input.date_time);
 
@@ -99,8 +105,10 @@ pub fn calculate_panchaang(input: &PanchangInput) -> Result<PanchaangOutput, Str
 	let date = input.date_time.date_naive();
 	let midnight = date.and_hms_opt(0, 0, 0).ok_or_else(|| "invalid date".to_string())?;
 	let jd_mid = jd_from_datetime(DateTime::from_naive_utc_and_offset(midnight, Utc));
-	let (rise_jd, set_jd) = approx_sunrise_sunset(jd_mid, input.longitude, input.latitude)
-		.ok_or_else(|| "could not compute sunrise".to_string())?;
+	let (rise_jd, set_jd) = match approx_sunrise_sunset(jd_mid, input.longitude, input.latitude) {
+		Ok((r, s)) => (r, s),
+		Err(e) => return Err(e),
+	};
 
 	Ok(PanchaangOutput {
 		tithi_number: t_num,

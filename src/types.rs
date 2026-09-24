@@ -1,5 +1,6 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use std::fmt;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Paksha {
@@ -49,4 +50,41 @@ pub struct GregorianMatch {
     pub date_time_start: DateTime<Utc>,
     pub date_time_end: DateTime<Utc>,
     pub sunrise_at_tithi: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum PanchaangError {
+    InvalidLatitude(f64),
+    InvalidLongitude(f64),
+    InvalidTimezone(f64),
+    InvalidTithi(u8),
+    PolarDayNight,
+    CalculationError(String),
+}
+
+impl fmt::Display for PanchaangError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            PanchaangError::InvalidLatitude(v) => write!(f, "invalid latitude: {}", v),
+            PanchaangError::InvalidLongitude(v) => write!(f, "invalid longitude: {}", v),
+            PanchaangError::InvalidTimezone(v) => write!(f, "invalid timezone offset: {}", v),
+            PanchaangError::InvalidTithi(v) => write!(f, "invalid tithi: {}", v),
+            PanchaangError::PolarDayNight => write!(f, "polar day/night: sunrise/sunset unavailable"),
+            PanchaangError::CalculationError(s) => write!(f, "calculation error: {}", s),
+        }
+    }
+}
+
+impl std::error::Error for PanchaangError {}
+
+impl From<String> for PanchaangError {
+    fn from(s: String) -> Self {
+        PanchaangError::CalculationError(s)
+    }
+}
+
+impl From<&str> for PanchaangError {
+    fn from(s: &str) -> Self {
+        PanchaangError::CalculationError(s.to_string())
+    }
 }

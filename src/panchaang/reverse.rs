@@ -139,7 +139,7 @@ fn tithi_at(jd: f64) -> (Paksha, u8) {
 }
 
 // Compute approximate sunrise JD for a given date (UTC day) and location using NOAA algorithm
-pub fn sunrise_jd_for_date(date_midnight_utc_jd: f64, longitude: f64, latitude: f64) -> Option<f64> {
+pub fn sunrise_jd_for_date(date_midnight_utc_jd: f64, longitude: f64, latitude: f64) -> Result<f64, crate::types::PanchaangError> {
     // NOAA algorithm (approx)
     let lon = longitude;
     let n = (date_midnight_utc_jd - 2451545.0 - 0.0009 - lon / 360.0).round();
@@ -153,11 +153,13 @@ pub fn sunrise_jd_for_date(date_midnight_utc_jd: f64, longitude: f64, latitude: 
     let delta = (obliq.sin() * lambda_rad.sin()).asin();
     let lat_rad = deg_to_rad(latitude);
     let cos_omega = (deg_to_rad(-0.83).sin() - lat_rad.sin() * delta.sin()) / (lat_rad.cos() * delta.cos());
-    if cos_omega.abs() > 1.0 { return None; }
+    if cos_omega.abs() > 1.0 {
+        return Err(crate::types::PanchaangError::PolarDayNight);
+    }
     let omega = rad_to_deg(cos_omega.acos());
     let _j_set = j_transit + omega / 360.0;
     let j_rise = j_transit - omega / 360.0;
-    Some(j_rise)
+    Ok(j_rise)
 }
 
 // Find tithi boundary near a target JD using bisection where tithi index changes
@@ -187,7 +189,7 @@ fn find_tithi_boundary(mut left: f64, mut right: f64, target_t_idx: i32) -> f64 
 // 5. If the active Tithi and Paksha match the query parameters, compute the exact start and end timestamps for that Tithi.
 // 6. Return all matching Gregorian timestamp windows.
 
-pub fn find_gregorian_date(query: &PanchangToGregorianQuery) -> Result<Vec<GregorianMatch>, String> {
+pub fn find_gregorian_date(query: &PanchangToGregorianQuery) -> Result<Vec<GregorianMatch>, crate::types::PanchaangError> {
     // 1. Approximate Gregorian year: Vikram Samvat is roughly +57 years ahead of Gregorian
     let approx_greg_year = query.samvat_year - 57;
 
@@ -209,7 +211,8 @@ pub fn find_gregorian_date(query: &PanchangToGregorianQuery) -> Result<Vec<Grego
         let jd_midnight = jd_from_datetime(DateTime::from_naive_utc_and_offset(midnight, Utc));
 
         // 3. Compute local sunrise JD for this date
-        if let Some(jd_rise) = sunrise_jd_for_date(jd_midnight, query.longitude, query.latitude) {
+        match sunrise_jd_for_date(jd_midnight, query.longitude, query.latitude) {
+            Ok(jd_rise) => {
             // 4. Compute tithi at sunrise
             let (paksha, t_num) = tithi_at(jd_rise);
             if paksha == query.paksha && t_num == query.tithi {
@@ -230,6 +233,11 @@ pub fn find_gregorian_date(query: &PanchangToGregorianQuery) -> Result<Vec<Grego
                     date_time_end: datetime_from_jd(end_jd),
                     sunrise_at_tithi: datetime_from_jd(jd_rise),
                 });
+            }
+            },
+            Err(e) => {
+                // propagate polar/day-night as an error
+                return Err(e);
             }
         }
     }
