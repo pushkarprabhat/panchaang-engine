@@ -64,3 +64,43 @@ fn invalid_inputs_error() {
     // We expect either an Ok(vec) but not matching, or an Err for invalid tithi; accept Err or Ok for now
     assert!(res.is_ok() || res.is_err());
 }
+
+
+// Canonical festival test cases — expected values may need verification from an authoritative almanac.
+// These are added as assertions placeholders; replace expected tithi/paksha with verified values.
+#[test]
+fn festival_canonical_dates() {
+    // Diwali 2023 (example date: 2023-11-12) — expected tithi and paksha must be verified
+    let diwali = types::PanchangInput {
+        date_time: Utc.with_ymd_and_hms(2023, 11, 12, 0, 0, 0).unwrap(),
+        latitude: 28.6139,
+        longitude: 77.2090,
+        elevation_meters: None,
+        ayanamsa_id: 1,
+    };
+    let out = panchaang::forward::calculate_panchaang(&diwali).expect("diwali forward failed");
+    // TODO: replace with canonical values from trusted almanac
+    assert!(out.tithi_number >= 1 && out.tithi_number <= 15);
+
+    // Gudhi Padwa 2023 (example: 2023-03-22)
+    let gp = types::PanchangInput {
+        date_time: Utc.with_ymd_and_hms(2023, 3, 22, 0, 0, 0).unwrap(),
+        latitude: 19.0760,
+        longitude: 72.8777,
+        elevation_meters: None,
+        ayanamsa_id: 1,
+    };
+    let out2 = panchaang::forward::calculate_panchaang(&gp).expect("gudhi forward failed");
+    assert!(out2.tithi_number >= 1 && out2.tithi_number <= 15);
+
+    // Chaitra Navratri 2024 (example start: 2024-03-30)
+    let cn = types::PanchangInput {
+        date_time: Utc.with_ymd_and_hms(2024, 3, 30, 0, 0, 0).unwrap(),
+        latitude: 28.6139,
+        longitude: 77.2090,
+        elevation_meters: None,
+        ayanamsa_id: 1,
+    };
+    let out3 = panchaang::forward::calculate_panchaang(&cn).expect("chaitra forward failed");
+    assert!(out3.tithi_number >= 1 && out3.tithi_number <= 15);
+}

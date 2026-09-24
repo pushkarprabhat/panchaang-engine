@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust toolchain
+        uses: dtolnay/install-toolchain@v1
+        with:
+          toolchain: stable
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: | 
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.OS }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - name: Run tests with ephem
+        run: cargo test --features ephem --workspace --all-targets -- --nocapture
+
+  wasm-build:
+    runs-on: ubuntu-latest
+    needs: build-test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust target
+        run: rustup target add wasm32-unknown-unknown
+      - name: Build wasm target
+        run: cargo build --target wasm32-unknown-unknown --features wasm
+      - name: wasm-bindgen (optional step)
+        if: success()
+        run: |
+          cargo install -q wasm-bindgen-cli || true
+          wasm-bindgen --version || true
+          wasm-bindgen --out-dir pkg --target web target/wasm32-unknown-unknown/debug/panchaang_engine.wasm || true
