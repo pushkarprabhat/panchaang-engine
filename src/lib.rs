@@ -145,7 +145,7 @@ fn bisect_boundary_start<E: AstronomyEngine>(
     mut target: DateTime<Utc>,
     expected_tithi: u8,
 ) -> DateTime<Utc> {
-    while (target - not_target) > Duration::seconds(1) {
+    while (target - not_target) > Duration::nanoseconds(1) {
         let mid = not_target + (target - not_target) / 2;
         if tithi_at(engine, mid) == expected_tithi {
             target = mid;
