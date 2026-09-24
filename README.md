@@ -1,7 +1,7 @@
 # panchang-engine
 High-performance Rust library (Wasm-ready) for bi-directional Panchang calculations (Gregorian ↔ Hindu Calendar).
 
-![CI](https://github.com/your-username/panchaang-engine/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/pushkarprabhat/panchaang-engine/actions/workflows/ci.yml/badge.svg)
 
 Features:
 
