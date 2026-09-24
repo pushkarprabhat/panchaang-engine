@@ -75,7 +75,7 @@ pub fn estimate_search_window(
     let anchor = base
         + Duration::days(input.lunar_month as i64 * 29 + i64::from(input.tithi.saturating_sub(1)));
     let start = anchor - Duration::days(15);
-    let end = start + Duration::days(29);
+    let end = anchor + Duration::days(15);
     Ok((start, end))
 }
 
@@ -222,7 +222,7 @@ mod tests {
             tithi: 2,
         };
         let (start, end) = estimate_search_window(input).unwrap();
-        assert_eq!(end.signed_duration_since(start).num_days(), 29);
+        assert_eq!(end.signed_duration_since(start).num_days(), 30);
         assert!(start <= NaiveDate::from_ymd_opt(2026, 3, 21).unwrap());
     }
 
