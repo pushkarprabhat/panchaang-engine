@@ -2,22 +2,42 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
+/// Waxing (Shukla) or waning (Krishna) half of the lunar month.
+/// Independent of Amanta/Purnimanta and of Vikrama/Shaka.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Paksha {
     Shukla,
     Krishna,
 }
 
+/// When the *month name* changes. Does not change tithi or paksha.
+///
+/// Amanta: month ends at Amavasya. Gujarati / Maharashtrian / most southern
+/// lunar calendars. Default for this engine.
+///
+/// Purnimanta: month ends at Purnima. Common in North Indian printed
+/// panchangs. During Krishna paksha the month *name* is one month ahead of
+/// Amanta (Amanta Ashadha Krishna = Purnimanta Shravan Krishna). That is why
+/// “Shravan starts” on different civil dates in Ahmedabad vs a Purnimanta book.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum MonthSystem {
     Amanta,
     Purnimanta,
 }
 
+/// Year-numbering only. Does not change tithi, paksha, or month system.
+/// Vikrama ≈ Gregorian + 57. Shaka ≈ Gregorian − 78 (Shaka 1948 ≈ 2026 CE).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum Era {
+    Vikrama,
+    Shaka,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PanchangToGregorianQuery {
     pub samvat_year: i32,
     pub lunar_month: u8,
+    /// false = Amanta (default). true = Purnimanta month names.
     pub is_purnimanta: bool,
     pub paksha: Paksha,
     pub tithi: u8,
