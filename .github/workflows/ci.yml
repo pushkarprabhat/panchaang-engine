@@ -11,12 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install Rust toolchain and wasm target
-        uses: dtolnay/install-toolchain@v1
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
-      - name: Add wasm target
-        run: rustup target add wasm32-unknown-unknown
+          targets: wasm32-unknown-unknown
       - name: Cache cargo registry
         uses: actions/cache@v4
         with:
@@ -32,8 +30,10 @@ jobs:
     needs: build-test
     steps:
       - uses: actions/checkout@v4
-      - name: Install Rust target
-        run: rustup target add wasm32-unknown-unknown
+      - name: Install Rust toolchain & target
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
       - name: Build wasm target
         run: cargo build --target wasm32-unknown-unknown --features wasm
       - name: wasm-bindgen (optional step)
