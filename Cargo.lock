@@ -334,6 +334,7 @@ dependencies = [
  "chrono",
  "serde",
  "siderust",
+ "wasm-bindgen",
 ]
 
 [[package]]

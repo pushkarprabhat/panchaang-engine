@@ -14,3 +14,10 @@ siderust = { version = "0.11.1", optional = true, features = ["serde"] }
 
 [features]
 ephem = ["siderust"]
+
+# Wasm support (exposes JS bindings via wasm-bindgen)
+wasm = ["wasm-bindgen"]
+
+[dependencies.wasm-bindgen]
+version = "0.2"
+optional = true
