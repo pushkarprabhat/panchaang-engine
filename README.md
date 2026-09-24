@@ -1,6 +1,8 @@
 # panchang-engine
 High-performance Rust library (Wasm-ready) for bi-directional Panchang calculations (Gregorian ↔ Hindu Calendar).
 
+![CI](https://github.com/your-username/panchaang-engine/actions/workflows/ci.yml/badge.svg)
+
 Features:
 
 - `ephem`: enable high-precision ephemeris support via `siderust` (pure-Rust). Note: `siderust` is AGPL-licensed.

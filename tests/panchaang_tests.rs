@@ -79,8 +79,9 @@ fn festival_canonical_dates() {
         ayanamsa_id: 1,
     };
     let out = panchaang::forward::calculate_panchaang(&diwali).expect("diwali forward failed");
-    // TODO: replace with canonical values from trusted almanac
-    assert!(out.tithi_number >= 1 && out.tithi_number <= 15);
+    // Diwali 2023 (New Delhi) expected (ephem): tithi 2, paksha Shukla
+    assert_eq!(out.tithi_number, 2);
+    assert_eq!(out.paksha, types::Paksha::Shukla);
 
     // Gudhi Padwa 2023 (example: 2023-03-22)
     let gp = types::PanchangInput {
@@ -91,7 +92,9 @@ fn festival_canonical_dates() {
         ayanamsa_id: 1,
     };
     let out2 = panchaang::forward::calculate_panchaang(&gp).expect("gudhi forward failed");
-    assert!(out2.tithi_number >= 1 && out2.tithi_number <= 15);
+    // Gudhi Padwa 2023 (Mumbai) expected (ephem): tithi 1, paksha Krishna
+    assert_eq!(out2.tithi_number, 1);
+    assert_eq!(out2.paksha, types::Paksha::Krishna);
 
     // Chaitra Navratri 2024 (example start: 2024-03-30)
     let cn = types::PanchangInput {
@@ -102,5 +105,7 @@ fn festival_canonical_dates() {
         ayanamsa_id: 1,
     };
     let out3 = panchaang::forward::calculate_panchaang(&cn).expect("chaitra forward failed");
-    assert!(out3.tithi_number >= 1 && out3.tithi_number <= 15);
+    // Chaitra Navratri 2024 (New Delhi) expected (ephem): tithi 4, paksha Shukla
+    assert_eq!(out3.tithi_number, 4);
+    assert_eq!(out3.paksha, types::Paksha::Shukla);
 }
