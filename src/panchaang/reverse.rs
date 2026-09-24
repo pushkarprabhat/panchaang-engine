@@ -164,7 +164,12 @@ pub fn sunrise_jd_for_date(date_midnight_utc_jd: f64, longitude: f64, latitude: 
 
 // Find tithi boundary near a target JD using bisection where tithi index changes
 fn find_tithi_boundary(mut left: f64, mut right: f64, target_t_idx: i32) -> f64 {
-    for _ in 0..60 {
+    // Use an adaptive binary search that stops when the interval is below millisecond precision
+    // tol_seconds: 0.001 = 1 millisecond
+    let tol_seconds = 0.001_f64;
+    let tol_days = tol_seconds / 86400.0;
+    let mut iterations = 0usize;
+    while (right - left) > tol_days && iterations < 200 {
         let mid = 0.5 * (left + right);
         let sun = sun_ecliptic_long(mid);
         let moon = moon_ecliptic_long(mid);
@@ -175,6 +180,7 @@ fn find_tithi_boundary(mut left: f64, mut right: f64, target_t_idx: i32) -> f64 
         } else {
             left = mid;
         }
+        iterations += 1;
     }
     0.5 * (left + right)
 }
@@ -191,7 +197,9 @@ fn find_tithi_boundary(mut left: f64, mut right: f64, target_t_idx: i32) -> f64 
 
 pub fn find_gregorian_date(query: &PanchangToGregorianQuery) -> Result<Vec<GregorianMatch>, crate::types::PanchaangError> {
     // 1. Approximate Gregorian year: Vikram Samvat is roughly +57 years ahead of Gregorian
-    let approx_greg_year = query.samvat_year - 57;
+    // Use checked subtraction to avoid overflow for extreme inputs.
+    let approx_greg_year = query.samvat_year.checked_sub(57)
+        .ok_or_else(|| crate::types::PanchaangError::CalculationError("samvat_year out of range".to_string()))?;
 
     // 2. Define a 30-day search window centered around lunar month midpoint.
     // We'll approximate month -> Gregorian month by using approx_greg_year and lunar_month.
@@ -201,8 +209,9 @@ pub fn find_gregorian_date(query: &PanchangToGregorianQuery) -> Result<Vec<Grego
 
     let mut matches = Vec::new();
 
-    // search +/-15 days
-    for d_off in -15..=15 {
+    // search window: expand the window to cover lunar month variations
+    // use a buffer of -2 days before center and extend to +33 days after (covers up to ~35 days)
+    for d_off in -2..=33 {
         let date = center_date + chrono::Duration::days(d_off.into());
         let midnight = NaiveDate::from_ymd_opt(date.year(), date.month(), date.day())
             .unwrap()
@@ -222,9 +231,9 @@ pub fn find_gregorian_date(query: &PanchangToGregorianQuery) -> Result<Vec<Grego
                 let diff = normalize_deg(moon - sun);
                 let t_idx = (diff / 12.0).floor() as i32 + 1; // 1..30
 
-                // find left boundary
-                let left = jd_rise - 2.0; // two days before
-                let right = jd_rise + 2.0; // two days after
+                // find left and right boundaries using expanded brackets
+                let left = jd_rise - 3.0; // a few days before
+                let right = jd_rise + 3.0; // a few days after
                 let start_jd = find_tithi_boundary(left, jd_rise, t_idx);
                 let end_jd = find_tithi_boundary(jd_rise, right, t_idx + 1);
 
