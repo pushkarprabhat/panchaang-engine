@@ -1,6 +1,6 @@
-use chrono::{Utc, TimeZone};
+use chrono::{TimeZone, Utc};
 
-use panchaang_engine::{types, panchaang};
+use panchaang_engine::{panchaang, types};
 
 #[test]
 fn forward_and_reverse_smoke() {
@@ -34,7 +34,6 @@ fn forward_and_reverse_smoke() {
     assert!(res.is_ok());
 }
 
-
 #[test]
 fn invalid_inputs_error() {
     // Invalid latitude
@@ -64,7 +63,6 @@ fn invalid_inputs_error() {
     // We expect either an Ok(vec) but not matching, or an Err for invalid tithi; accept Err or Ok for now
     assert!(res.is_ok() || res.is_err());
 }
-
 
 // Canonical festival test cases — expected values may need verification from an authoritative almanac.
 // These are added as assertions placeholders; replace expected tithi/paksha with verified values.

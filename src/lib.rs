@@ -60,6 +60,7 @@ pub trait AstronomyEngine {
 /// - Era offsets of Vikram = Gregorian + 57 and Shaka = Gregorian - 78
 /// - Chaitra is approximately aligned around March 21
 /// - Each lunar month advances by an approximate 29-day offset
+/// - The requested tithi approximately maps to a day offset within that month
 pub fn estimate_search_window(
     input: InverseSearchInput,
 ) -> Result<(NaiveDate, NaiveDate), InverseSearchError> {
@@ -71,7 +72,8 @@ pub fn estimate_search_window(
 
     let base = NaiveDate::from_ymd_opt(gregorian_year, 3, 21)
         .ok_or(InverseSearchError::InvalidGregorianYear(gregorian_year))?;
-    let anchor = base + Duration::days(input.lunar_month as i64 * 29);
+    let anchor = base
+        + Duration::days(input.lunar_month as i64 * 29 + i64::from(input.tithi.saturating_sub(1)));
     let start = anchor - Duration::days(15);
     let end = start + Duration::days(29);
     Ok((start, end))
@@ -225,6 +227,19 @@ mod tests {
     }
 
     #[test]
+    fn centers_window_on_requested_tithi() {
+        let input = InverseSearchInput {
+            era: CalendarEra::ShakaSamvat,
+            samvat_year: 1948,
+            lunar_month: LunarMonth::Chaitra,
+            tithi: 30,
+        };
+        let (start, end) = estimate_search_window(input).unwrap();
+        assert!(start <= NaiveDate::from_ymd_opt(2026, 4, 19).unwrap());
+        assert!(end >= NaiveDate::from_ymd_opt(2026, 4, 19).unwrap());
+    }
+
+    #[test]
     fn finds_tithi_and_precise_utc_bounds_at_sunrise() {
         let engine = MockAstronomy {
             epoch: Utc.with_ymd_and_hms(2026, 3, 20, 0, 0, 0).unwrap(),
@@ -244,8 +259,14 @@ mod tests {
             .unwrap();
 
         assert_eq!(target.sunrise_utc.hour(), 6);
-        assert_eq!(target.start_utc, Utc.with_ymd_and_hms(2026, 3, 21, 0, 0, 0).unwrap());
-        assert_eq!(target.end_utc, Utc.with_ymd_and_hms(2026, 3, 22, 0, 0, 0).unwrap());
+        assert_eq!(
+            target.start_utc,
+            Utc.with_ymd_and_hms(2026, 3, 21, 0, 0, 0).unwrap()
+        );
+        assert_eq!(
+            target.end_utc,
+            Utc.with_ymd_and_hms(2026, 3, 22, 0, 0, 0).unwrap()
+        );
     }
 
     #[test]
@@ -267,12 +288,18 @@ mod tests {
             .find(|m| m.date == NaiveDate::from_ymd_opt(2026, 3, 21).unwrap())
             .unwrap();
 
-        assert_eq!(target.start_utc, Utc.with_ymd_and_hms(2026, 3, 21, 0, 30, 0).unwrap());
-        assert_eq!(target.end_utc, Utc.with_ymd_and_hms(2026, 3, 22, 0, 30, 0).unwrap());
+        assert_eq!(
+            target.start_utc,
+            Utc.with_ymd_and_hms(2026, 3, 21, 0, 30, 0).unwrap()
+        );
+        assert_eq!(
+            target.end_utc,
+            Utc.with_ymd_and_hms(2026, 3, 22, 0, 30, 0).unwrap()
+        );
     }
 }
 
-pub mod types;
 pub mod panchaang;
+pub mod types;
 
 pub use types::*;

@@ -69,7 +69,9 @@ impl fmt::Display for PanchaangError {
             PanchaangError::InvalidLongitude(v) => write!(f, "invalid longitude: {}", v),
             PanchaangError::InvalidTimezone(v) => write!(f, "invalid timezone offset: {}", v),
             PanchaangError::InvalidTithi(v) => write!(f, "invalid tithi: {}", v),
-            PanchaangError::PolarDayNight => write!(f, "polar day/night: sunrise/sunset unavailable"),
+            PanchaangError::PolarDayNight => {
+                write!(f, "polar day/night: sunrise/sunset unavailable")
+            }
             PanchaangError::CalculationError(s) => write!(f, "calculation error: {}", s),
         }
     }
