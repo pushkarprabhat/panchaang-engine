@@ -1,6 +1,8 @@
+pub mod calendar;
 pub mod ephemeris;
 pub mod geo;
 pub mod panchaang;
+pub mod reminders;
 pub mod types;
 
 pub use types::*;
