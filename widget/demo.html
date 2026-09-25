@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Sthan Panchang — Ahmedabad</title>
+  <style>
+    body { font: 16px/1.5 system-ui, sans-serif; max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
+    table { border-collapse: collapse; width: 100%; font-size: 13px; }
+    td, th { border: 1px solid #ddd; padding: 6px; text-align: left; }
+  </style>
+</head>
+<body>
+  <h1>Sthan Panchang</h1>
+  <p>Today (Ahmedabad)</p>
+  <script src="embed.js" data-city="Ahmedabad" data-api="http://127.0.0.1:8088"></script>
+  <h2>This month</h2>
+  <div id="cal">Loading calendar…</div>
+  <script>
+    fetch("http://127.0.0.1:8088/v1/calendar?city=Ahmedabad")
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        var html = "<p>" + d.year + "-" + d.month + "</p><table><tr><th>Date</th><th>Tithi</th><th>Paksha</th></tr>";
+        (d.days || []).forEach(function (day) {
+          html += "<tr><td>" + day.date + "</td><td>" + day.tithi_number + "</td><td>" + day.paksha + "</td></tr>";
+        });
+        html += "</table>";
+        document.getElementById("cal").innerHTML = html;
+      })
+      .catch(function () {
+        document.getElementById("cal").textContent = "Start API: cargo run --bin panchaang-api --features server";
+      });
+  </script>
+</body>
+</html>
